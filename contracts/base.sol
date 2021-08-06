@@ -19,7 +19,7 @@ contract BaseContract is Ownable {
 
         uint64 test_start_time;
         uint64 test_end_time;
-        uint64 reg_end_time;
+        uint64 reg_end_time;  // TODO: use it
 
         uint64 cnt_registered;
 
@@ -30,11 +30,11 @@ contract BaseContract is Ownable {
         /*
         Info about job done
         */
-        // TODO
         uint job_id;
         address worker;
         uint64 success;
         string MTRoot;
+        string proofs;
     }
 
     JobInfo[] private _jobs;
@@ -44,7 +44,7 @@ contract BaseContract is Ownable {
     event JobCreated(uint id);
     event JobCheck(string host, uint16 port, uint value, uint64 needed_queries, uint64 max_queries_per_worker,
                    uint64 test_start_time, uint64 test_end_time, uint64 reg_end_time, address job_owner); // TODO: Is string in event ok?
-    event JobDone(uint job_id, address worker, uint64 success, string MTRoot);
+    event JobDone(uint job_id, address worker, uint64 success, string MTRoot, string proof);
     event WorkChecked(bool approved, address worker);
 
     function create_job (string calldata _host,
@@ -101,16 +101,17 @@ contract BaseContract is Ownable {
         return address(this).balance;
     }
 
-    function check_job(uint _job_id, uint64 _success, string calldata _MTRoot) external {
-        emit JobDone(_job_id, msg.sender, _success, _MTRoot);
+    function check_job(uint _job_id, uint64 _success, string calldata _MTRoot, string calldata _proofs) external {
+        emit JobDone(_job_id, msg.sender, _success, _MTRoot, _proofs);
     }
 
-    function job_result_ok(uint _value, uint _job_id, address payable _worker, uint64 _success, string calldata _MTRoot) external onlyOwner payable {
+    function job_result_ok(uint _value, uint _job_id, address payable _worker, uint64 _success, string calldata _MTRoot, string calldata _proofs) external onlyOwner payable {
         jobs_done.push(JobDoneInfo(
             _job_id,
             address(_worker),
             _success,
-            _MTRoot
+            _MTRoot,
+            _proofs
         ));
         _worker.transfer(_value);
         emit WorkChecked(true, address(_worker)); // TODO: who?

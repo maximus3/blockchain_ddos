@@ -1,5 +1,5 @@
 import json
-from solcx import compile_files, set_solc_version
+from solcx import compile_files, set_solc_version, install_solc
 
 
 def get_address(name):
@@ -9,7 +9,11 @@ def get_address(name):
 
 
 def compile_contract(contract_source_path='contracts/base.sol'):
-    set_solc_version('0.5.17')
+    try:
+        set_solc_version('0.5.17')
+    except Exception:
+        install_solc('0.5.17')
+        set_solc_version('0.5.17')
     compiled_sol = compile_files([contract_source_path])
     contract_id, contract_interface = list(compiled_sol.items())[0]
     assert (contract_id.startswith(contract_source_path))  # TODO

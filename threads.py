@@ -1,7 +1,8 @@
+import random
 from threading import Thread, Lock
 import time
 
-from merkel_tree import MerkleTree
+from merkel_tree import MerkelTree
 from make_ddos import make_ddos
 
 
@@ -51,15 +52,17 @@ class BaseWrapper:
 
 
 class JobThread(BaseThread):
-    def __init__(self, cv, jobs_to_do, jobs_locked, w3, contract):
+    def __init__(self, cv, jobs_to_do, jobs_locked, w3, contract, name=''):
         super().__init__()
         self.cv = cv
         self.jobs_to_do = jobs_to_do
         self.jobs_locked = jobs_locked
         self.w3 = w3
         self.contract = contract
+        self.need_bad = False  # For tests
+        self.name = name
 
-        self.logger_name = 'JobThread:Log'
+        self.logger_name = 'JobThread:' + name + ':LOG'
 
     def run(self):
         print(self.logger_name, f'Search for new jobs started')
@@ -79,18 +82,23 @@ class JobThread(BaseThread):
                     print(self.logger_name, f'Job {job_id} not found')
                     continue
 
-                responses = make_ddos()
-                print(self.logger_name, f'Job {job_id} done!')
+                suc_count, responses = make_ddos(job)
 
-                # TODO: make report here
-                merkel_tree = MerkleTree()
+                merkel_tree = MerkelTree()
                 merkel_root = merkel_tree.make_tree(responses)
+
+                if self.need_bad:
+                    merkel_root = list(merkel_root)
+                    random.shuffle(merkel_root)
+                    merkel_root = ''.join(merkel_root)
+
+                print(self.logger_name, f'Job {job_id} {job.host} done! Success: {suc_count}, MTRoot: {merkel_root}')
 
                 report = {
                     '_job_id': job_id,
-                    '_success': 50 * job_id,
-                    '_MTRoot': merkel_root.value,
-                    # '_proof': ''
+                    '_success': suc_count,
+                    '_MTRoot': merkel_root,
+                    '_proofs': merkel_tree.get_proofs(),
                 }
 
                 self.contract.functions.check_job(**report).transact()
@@ -109,7 +117,7 @@ class EventSearcherThread(BaseThread):
         self.name = name
         self.handler_args = handler_args
 
-        self.logger_name = 'EventSearcherThread:Log'
+        self.logger_name = 'EventSearcherThread:' + name + ':LOG'
 
     def run(self):
         print(self.logger_name, f'Search for new events {self.name} started')
@@ -118,7 +126,7 @@ class EventSearcherThread(BaseThread):
                 if not self.isRunning:
                     break
             for event in self.event_filter.get_new_entries():
-                self.event_handler(event, *self.handler_args)
+                self.event_handler(self.name, event, *self.handler_args)
             time.sleep(self.poll_interval)
         print(self.logger_name, f'Search for new events {self.name} stopped')
 

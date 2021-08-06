@@ -13,9 +13,6 @@ class AllTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.w3, cls.contract = start_app()
-        # contract_address, contract_abi = load_contract_data()
-        # w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
-        # cls.contract = w3.eth.contract(address=contract_address, abi=contract_abi)
         cls.payload = {
             'from': get_address('employer'),
             'value': 1000000,
@@ -27,18 +24,25 @@ class AllTest(unittest.TestCase):
         for name in active_threads:
             cls.active_threads.append(active_threads[name])
 
-        _, _, active_threads, _, _, _ = start_client()
+        _, _, active_threads, _, _, _ = start_client(client_name='1')
         for name in active_threads:
             cls.active_threads.append(active_threads[name])
 
-    def test_good(self):
-        self.contract.functions.create_job('https://', 80, 1, 1, 1, 1, 1).transact(self.payload)
+        _, _, active_threads, _, _, _ = start_client(client_name='2')
+        for name in active_threads:
+            if name.endswith('JobThread'):
+                active_threads[name].thread.need_bad = True
+            cls.active_threads.append(active_threads[name])
 
-    def test_good_second(self):
-        self.contract.functions.create_job('https://must_be_error', 80, 1, 1, 1, 1, 1).transact(self.payload)
-
-    def test_bad(self):
-        self.contract.functions.create_job('BAD', 80, 1, 1, 1, 1, 1).transact(self.payload)
+    def test_add_jobs(self):
+        self.contract.functions.create_job('https://api.github.com', 443, 50, 20, 1, 1, 1).transact(self.payload)
+        time.sleep(5)
+        self.contract.functions.create_job('https://yandex.ru', 443, 50, 20, 1, 1, 1).transact(self.payload)
+        time.sleep(5)
+        self.contract.functions.create_job('BAD', 443, 100, 20, 1, 1, 1).transact(self.payload)
+        time.sleep(5)
+        self.contract.functions.create_job('https://google.ru', 443, 100, 20, 1, 1, 1).transact(self.payload)
+        time.sleep(5)
 
     @classmethod
     def tearDownClass(cls):

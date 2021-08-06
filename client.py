@@ -20,22 +20,23 @@ def print_job_info(job_id, jobs_locked):
     print(f'CLIENT_LOG: Registration before {job.reg_end_time}')
 
 
-def handler_on_new_job(event, contract, do_job_cv, jobs_locked, jobs_to_do, SEND_TO_WORK):
+def handler_on_new_job(name, event, contract, do_job_cv, jobs_locked, jobs_to_do, SEND_TO_WORK):
     job_id = event.args.id
     job = JobInfo(contract.functions.get_job_info(job_id).call())
     with jobs_locked as jobs:
         jobs[job_id] = job
-    print(f'CLIENT_LOG: Found new job {job.id}')
+    print(name, f'Found new job {job.id}')
     if SEND_TO_WORK:
         with do_job_cv:
             jobs_to_do.append(job_id)
             do_job_cv.notify()
 
 
-def start_client(send_to_work=True):
+def start_client(send_to_work=True, client_name=''):
+    client_name = 'CLIENT' + client_name
     contract_address, contract_abi = load_contract_data()
     w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
-    w3.eth.default_account = get_address('client')
+    w3.eth.default_account = get_address(client_name.lower())
     contract = w3.eth.contract(address=contract_address, abi=contract_abi)
 
     jobs_locked = LockObj(dict())
@@ -44,14 +45,14 @@ def start_client(send_to_work=True):
 
     active_threads = {}
 
-    name = 'JobCreated'
+    name = client_name + ':JobCreated'
     event_filter = contract.events.JobCreated.createFilter(fromBlock='latest')
-    searcher = EventSearcherWrapper(event_filter, handler_on_new_job, 'JobCreated',
+    searcher = EventSearcherWrapper(event_filter, handler_on_new_job, name,
                                     handler_args=(contract, do_job_cv, jobs_locked, jobs_to_do, send_to_work))
     active_threads[name] = searcher
 
-    name = 'JobThread'
-    active_threads[name] = JobThreadWrapper(do_job_cv, jobs_to_do, jobs_locked, w3, contract)
+    name = client_name + ':JobThread'
+    active_threads[name] = JobThreadWrapper(do_job_cv, jobs_to_do, jobs_locked, w3, contract, client_name)
 
     for name in active_threads:
         active_threads[name].start_thread()

@@ -4,6 +4,7 @@ class JobDoneInfo:
         self._worker = event_args.worker
         self._success = event_args.success
         self._MTRoot = event_args.MTRoot
+        self._proofs = event_args.proof
 
     def save_repr(self):
         return {
@@ -11,7 +12,8 @@ class JobDoneInfo:
             '_job_id': self._job_id,
             '_worker': self._worker,
             '_success': self._success,
-            '_MTRoot': self._MTRoot
+            '_MTRoot': self._MTRoot,
+            '_proofs': self._proofs
         }
 
     def __str__(self):
