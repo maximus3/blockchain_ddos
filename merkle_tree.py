@@ -12,7 +12,7 @@ def generate_numbers(to, rng, num=10):
     return rng.sample(range(to), num)
 
 
-class MerkelTree:
+class MerkleTree:
     def __init__(self):
         self.root = None
         self._tree_made = False
@@ -38,7 +38,7 @@ class MerkelTree:
             node_seq.append(node_seq[-1])
         for i in range(0, len(node_seq), 2):
             el1, el2 = node_seq[i], node_seq[i + 1]
-            node_hashes.append(self.double_sha_256(el1 + el2))  # TODO: in first el1.value and el2.value not hashes
+            node_hashes.append(self.double_sha_256(el1 + el2))  # TODO: in first el1 and el2 not hashes
 
         self.levels.append(node_hashes)
         if len(node_hashes) == 1:
@@ -58,9 +58,9 @@ class MerkelTree:
 
     def get_proofs(self, json_data=None, seed=None):
         if not self._tree_made and (json_data is None or seed is None):
-            raise RuntimeError('Merkel tree not made')
+            raise RuntimeError('Merkle tree not made')
         if self._tree_made and (json_data is not None or seed is not None):
-            raise RuntimeError('Merkel tree is already made, run function without parameters or on another tree')
+            raise RuntimeError('Merkle tree is already made, run function without parameters or on another tree')
         already_stored = None
         if json_data is not None:
             leaf_count, already_responses, already_stored = json.loads(json_data)

@@ -2,7 +2,7 @@ import random
 from threading import Thread, Lock
 import time
 
-from merkel_tree import MerkelTree
+from merkle_tree import MerkleTree
 from make_ddos import make_ddos
 
 
@@ -84,7 +84,7 @@ class JobThread(BaseThread):
 
                 suc_count, responses = make_ddos(job)
 
-                merkel_tree = MerkelTree()
+                merkel_tree = MerkleTree()
                 merkel_root = merkel_tree.make_tree(responses)
 
                 if self.need_bad:

@@ -3,11 +3,11 @@ from web3 import Web3
 from contract_utils import load_contract_data, get_address
 from threads import EventSearcherWrapper
 from job import JobInfo, JobDoneInfo
-from merkel_tree import MerkelTree
+from merkle_tree import MerkleTree
 
 
 def check_job_done(job, job_done):
-    new_mtroot = MerkelTree().get_proofs(job_done._proofs, job_done._MTRoot)
+    new_mtroot = MerkleTree().get_proofs(job_done._proofs, job_done._MTRoot)
     if new_mtroot != job_done._MTRoot:
         return False
     return True

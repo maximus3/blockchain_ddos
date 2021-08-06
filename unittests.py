@@ -1,16 +1,16 @@
 import unittest
-from merkel_tree import MerkelTree
+from merkle_tree import MerkleTree
 
 
 class MerkelTreeTest(unittest.TestCase):
 
     def my_wrapper_test(self, responses):
-        merkel_tree = MerkelTree()
+        merkel_tree = MerkleTree()
         mtroot = merkel_tree.make_tree(responses)
         json_data = merkel_tree.get_proofs()
         del merkel_tree
 
-        new_mtroot = MerkelTree().get_proofs(json_data, mtroot)
+        new_mtroot = MerkleTree().get_proofs(json_data, mtroot)
 
         self.assertTrue(mtroot == new_mtroot)
 
