@@ -1,6 +1,9 @@
 from threading import Thread, Lock
 import time
 
+from merkel_tree import MerkleTree
+from make_ddos import make_ddos
+
 
 class BaseThread(Thread):
     def __init__(self):
@@ -76,18 +79,20 @@ class JobThread(BaseThread):
                     print(self.logger_name, f'Job {job_id} not found')
                     continue
 
-                # TODO: make job here
-                responses = []
+                responses = make_ddos()
                 print(self.logger_name, f'Job {job_id} done!')
 
                 # TODO: make report here
+                merkel_tree = MerkleTree()
+                merkel_root = merkel_tree.make_tree(responses)
+
                 report = {
                     '_job_id': job_id,
                     '_success': 50 * job_id,
-                    '_MTRoot': 'hash_here'
+                    '_MTRoot': merkel_root.value,
+                    # '_proof': ''
                 }
 
-                # TODO: send report here
                 self.contract.functions.check_job(**report).transact()
 
                 # TODO: start new thread waiting job approve
